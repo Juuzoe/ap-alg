@@ -10,7 +10,7 @@ Job search systems usually treat salary and experience as yes/no filters, so a p
 
 A typical job search interface exposes pay and experience as filters. A posting passes when its pay band reaches the seeker's minimum and its years requirement contains the seeker's experience; the survivors are then ranked by text relevance. Filters of this kind discard information. A band of \$30k to \$41k passes a \$40k minimum just as a band of \$40k to \$60k does, although 90% of the first band sits below the floor. A posting that omits its salary fails any salary filter, and a seeker one year short of a requirement never sees the posting. In a market of 1,000 synthetic postings, the filter pipeline we describe in Section 5.6 returned no results for 8% of 200 seekers and fewer than ten for 55% of them.
 
-The graded alternative studied here is the expected share of one interval that lands inside another once Gaussian noise blurs both edges. Li et al. [1] use the same quantity, computed on Gaussian-smoothed boxes, to train box embeddings, and in one dimension it reduces to differences of the normal CDF. Applying it after retrieval is straightforward: search engines grade numeric fields with functions evaluated on documents the query has already matched [13], and vector search systems apply such functions to the candidates an index returns. The cost of that design is recall: a posting that the text retrieval ranks below the shortlist cutoff is never scored, however well its ranges fit. If the score is instead an inner product of two vectors, any engine that computes inner products can rank by it, a vector database included.
+The graded alternative studied here is the expected share of one interval that lands inside another once Gaussian noise blurs both edges. Li et al. [1] use the same quantity, computed on Gaussian-smoothed boxes, to train box embeddings, and in one dimension it reduces to differences of the normal CDF. Applying it after retrieval is straightforward: search engines grade numeric fields with functions evaluated on documents the query has already matched [13], and vector search systems apply such functions to the candidates an index returns. That design costs recall, because a posting that the text retrieval ranks below the shortlist cutoff is never scored, however well its ranges fit. If the score is instead an inner product of two vectors, any engine that computes inner products can rank by it, a vector database included.
 
 This paper makes four contributions.
 
@@ -70,7 +70,7 @@ v(I, s) = \frac{L}{\sqrt{P}} \Bigl( 1,\; \sqrt{2}\, c_1 \cos \omega_1 m,\; \sqrt
 
 *Proof.* The product of the $`k`$-th coordinate pairs is $`(2\lvert B\rvert/P)\, c_k^A c_k^B (\cos\omega_k m_A \cos\omega_k m_B + \sin\omega_k m_A \sin\omega_k m_B)`$. The bracket is $`\cos \omega_k (m_A - m_B)`$, and $`e^{-s_A^2 \omega_k^2/2} e^{-s_B^2 \omega_k^2/2} = e^{-\sigma^2 \omega_k^2/2}`$. $`\square`$
 
-The factorization in the last step is what allows the slack to live on both sides. A seeker who widens their tolerance changes $`s_A`$ in one query vector, and every stored vector stays valid. Encodings that store a smoothed indicator, such as interpolation on a grid, fix $`\sigma`$ when the index is built.
+The factorization in the last step allows the slack to live on both sides. A seeker who widens their tolerance changes $`s_A`$ in one query vector, and every stored vector stays valid. Encodings that store a smoothed indicator, such as interpolation on a grid, fix $`\sigma`$ when the index is built.
 
 ### 3.3 Error bound
 
@@ -239,7 +239,7 @@ Lee, Kim and Chung [8] estimate range selectivity from cosine-series coefficient
 
 All results so far come from synthetic data. Real postings need pay-period and currency normalization, many omit a range, and the posted band may not be the band an employer will accept; evaluating on public postings with salary ranges is the next step.
 
-The Gaussian slack model is a modelling choice. It gives every value inside a band the same weight and bends both edges by the same amount, while a real employer may stretch upward sooner than downward.
+The Gaussian slack model gives every value inside a band the same weight and bends both edges by the same amount, while a real employer may stretch upward sooner than downward.
 
 The fused score is additive, so a strong text match can compensate for a poor pay fit. Dealbreakers such as work authorization or location belong in hard filters. A re-score step can apply a soft conjunction instead, $`w_t\langle e_q, e_p\rangle + (w_{\text{pay}} + w_{\text{years}}) F_{\text{pay}} F_{\text{years}}`$, which never exceeds the additive score when the weights are non-negative and the fits lie in $`[0, 1]`$, so Proposition 2 still applies.
 

@@ -10,7 +10,7 @@ Open `index.html` from a full clone of the repository. It loads `../soft-range.j
 python -m http.server 8000
 ```
 
-Run that from the repository root, then visit `http://localhost:8000/demo/`.
+Run that from the repository root, then visit `http://localhost:8000/demo/`. GitHub Pages can serve the repository as it is. Its root `index.html` forwards here.
 
 ## Details
 
@@ -23,5 +23,3 @@ The search is kept in the URL, so a link or a refresh restores it. Press `/` to 
 | `index.html` | markup, styles and script |
 | `tokens.css` | colours, type sizes and spacing, for light and dark themes |
 | `screenshot.png` | the image in the top-level README |
-
-GitHub Pages can serve the repository root as it is: the root `index.html` forwards to this page.

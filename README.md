@@ -21,7 +21,7 @@ $`F`$ is the expected share of range $`A`$ that lands inside range $`B`$ when Ga
 
 [![The demo: hard filters on the left, the soft ranking on the right, and a chart of the dot product against the exact fit](demo/screenshot.png)](https://juuzoe.github.io/ap-alg/demo/)
 
-The demo runs a job search over 2,000 or 20,000 synthetic postings and shows the hard-filter results next to the soft ranking. Pick any posting to plot its exact pay fit against the dot product and see the error at each salary. It runs at [juuzoe.github.io/ap-alg/demo](https://juuzoe.github.io/ap-alg/demo/), and `demo/index.html` also opens straight from a clone.
+The demo runs a job search over 2,000 or 20,000 synthetic postings and shows the hard-filter results next to the soft ranking. Pick any posting to plot its exact pay fit against the dot product and see the error at each salary. It runs at [juuzoe.github.io/ap-alg/demo](https://juuzoe.github.io/ap-alg/demo/), and `demo/index.html` also opens straight from a clone ([demo/README.md](demo/README.md) has the details).
 
 ## Install
 
@@ -29,7 +29,7 @@ The demo runs a job search over 2,000 or 20,000 synthetic postings and shows the
 npm install github:Juuzoe/ap-alg
 ```
 
-The library is one file with no dependencies. It runs on Node 18 or later and in the browser, where a classic `<script>` tag sets `window.softRange`. TypeScript types ship with it.
+The library is one file, [`soft-range.js`](soft-range.js), with no dependencies. It runs on Node 18 or later and in the browser, where a classic `<script>` tag sets `window.softRange`. TypeScript types ship with it.
 
 ## Quick start
 
@@ -132,18 +132,6 @@ npm run examples
 ```
 
 The benchmarks use fixed seeds and print the tables in the paper; only the timings change between machines. `bench/ann.js` trains two k-means quantizers and takes about 20 seconds.
-
-## Repository layout
-
-| path | contents |
-|---|---|
-| [`soft-range.js`](soft-range.js) | the library: `axis`, `encode`, `fit`, `topK` and `jobModel` |
-| [`soft-range.mjs`](soft-range.mjs), [`soft-range.d.ts`](soft-range.d.ts) | ES module entry and TypeScript types |
-| [`test.js`](test.js) | error bound, input handling, certified top-k |
-| [`examples/`](examples) | three runnable scripts |
-| [`bench/`](bench) | the synthetic market generator and the two benchmarks |
-| [`paper/`](paper/soft-range-matching.md) | method, proofs, experiments, related work |
-| [`demo/`](demo) | the interactive comparison; see [`demo/README.md`](demo/README.md) |
 
 ## Contributing
 
