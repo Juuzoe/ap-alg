@@ -19,7 +19,7 @@ console.log(`dot product            ${approx.toFixed(6)}`)
 console.log(`closed form            ${exact.toFixed(6)}`)
 console.log(`difference             ${Math.abs(approx - exact).toExponential(2)}  (bound ${hours.bound.toExponential(2)})`)
 
-// The query carries its own slack, so a stricter customer needs a new query vector and nothing else.
+// The query carries its own slack, so a stricter customer needs only a new query vector.
 const strict = encode(hours, 16.5, 18, 0.1, true)
 console.log(`stricter customer      ${dot(strict, shop).toFixed(6)}  vs exact ${fit(16.5, 18, 9, 17, Math.hypot(0.3, 0.1)).toFixed(6)}`)
 

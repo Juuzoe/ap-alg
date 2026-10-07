@@ -189,7 +189,7 @@ pre { font: var(--text-sm)/1.6 var(--font-mono); background: var(--surface); bor
       </select>
     </div>
   </div>
-  <p class="hint">Flexibility and weights live in your query vector, so changing them re-ranks without re-encoding a single posting. The postings are synthetic. Press / to jump to the keywords.</p>
+  <p class="hint">Flexibility and weights live in your query vector, so changing them re-ranks without re-encoding any posting. The postings are synthetic. Press / to jump to the keywords.</p>
 </form>
 
 <div class="cols">
@@ -256,7 +256,7 @@ vector(I, s) = (1/√P)·[ L,  √2·L·sinc(ω_k·h)·e^(−s²ω_k²/2)·cos(�
                m, h: midpoint and half-width of I;  L = 1 on the measured side, |I| on the other
                P = D + 2E + 2W: axis length D plus the open-end reach E and the guard gap W at both ends
 |query · posting − fit| ≤ Σ_(k>K) (2/πk)·e^(−2π²σ_min²k²/P²) + Φ̄(E/σ_max) + 2·Φ̄(2W/σ_max) ≤ ε</pre>
-  <p class="muted">K is the smallest count that meets ε. At ε = 0.001 pay uses 133 numbers and experience 113. The bound holds for every pair, with no random projections and no sampling. A flat scan whose error stays within Δ can prove its top-k exact: it re-scores until the k-th exact score beats the best unseen approximate score plus Δ, the multi-step k-NN rule of Seidl and Kriegel (1998).</p>
+  <p class="muted">K is the smallest count that meets ε. At ε = 0.001 pay uses 133 numbers and experience 113. The frequencies are fixed, so the bound is deterministic and holds for every pair. A flat scan whose error stays within Δ can prove its top-k exact: it re-scores until the k-th exact score beats the best unseen approximate score plus Δ, the multi-step k-NN rule of Seidl and Kriegel (1998).</p>
 </section>
 
 </div>

@@ -15,7 +15,7 @@
   const gauss = r => Math.sqrt(-2 * Math.log(1 - r())) * Math.cos(2 * Math.PI * r())
   const pick = (r, a) => a[Math.floor(r() * a.length)]
 
-  // Hashed bag of words: each token adds +-1 to one of TEXT_DIM slots; the result is unit length.
+  // Hashed bag of words: each token adds +-1 to one of TEXT_DIM slots, then the vector is scaled to unit length.
   function embed(text) {
     const v = new Float64Array(TEXT_DIM)
     for (const tok of text.toLowerCase().match(/[a-z0-9+#]+/g) || []) {

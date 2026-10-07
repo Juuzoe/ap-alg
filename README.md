@@ -15,7 +15,7 @@ F(A, B; \sigma) = \frac{1}{\lvert A\rvert}\int_A \int_B \varphi_\sigma(x - y)\,d
 \sigma^2 = s_A^2 + s_B^2
 ```
 
-$`F`$ is the expected share of range $`A`$ that lands inside range $`B`$ when Gaussian noise blurs both edges. Each side keeps its own tolerance ($`s_A`$ in the query, $`s_B`$ in the stored vector), so a seeker can loosen a search without re-encoding a single posting. The full write-up, with proofs, experiments and related work, is [paper/soft-range-matching.md](paper/soft-range-matching.md).
+$`F`$ is the expected share of range $`A`$ that lands inside range $`B`$ when Gaussian noise blurs both edges. Each side keeps its own tolerance ($`s_A`$ in the query, $`s_B`$ in the stored vector), so a seeker can loosen a search without re-encoding any posting. The write-up with proofs and experiments is [paper/soft-range-matching.md](paper/soft-range-matching.md).
 
 ## Demo
 
@@ -147,7 +147,7 @@ The benchmarks use fixed seeds and print the tables in the paper; only the timin
 
 ## Contributing
 
-Bug reports, questions and pull requests are welcome; [CONTRIBUTING.md](CONTRIBUTING.md) covers the workflow. Open problems where help would count most:
+Issues and pull requests are welcome; [CONTRIBUTING.md](CONTRIBUTING.md) covers the workflow. Open problems where help would count most:
 
 - an evaluation on real job postings that publish salary ranges
 - an index that keeps recall on the fused vectors (the inverted file above does not)

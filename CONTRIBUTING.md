@@ -1,10 +1,10 @@
 # Contributing
 
-Bug reports, questions, results on other data and pull requests are all welcome.
+Issues and pull requests are welcome, and so are results on data other than the synthetic market.
 
 ## Setup
 
-You need Node 18 or later and nothing else. From the repository root:
+The only requirement is Node 18 or later. From the repository root:
 
 ```bash
 node test.js
@@ -25,7 +25,7 @@ The tests take a few seconds. They cover the error bound, input handling and the
 - Keep `soft-range.js` free of dependencies and loadable both as a Node module and as a browser `<script>`.
 - Add a test to `test.js` for any behaviour you change. The bound tests compare thousands of encoded pairs against `fit()`, so a change that breaks the guarantee fails there.
 - If a change moves a benchmark number, update the tables in `paper/soft-range-matching.md` and `README.md` in the same pull request.
-- Follow the surrounding style: two-space indent, single quotes, no semicolons. `.editorconfig` covers whitespace; there is no formatter to run.
+- Match the surrounding style (two-space indent, single quotes, no semicolons); `.editorconfig` handles whitespace and there is no formatter to run.
 
 ## Reporting a wrong result
 
@@ -35,4 +35,4 @@ The most useful report is an input where the dot product and `fit()` differ by m
 
 Open an issue, and if it is about the math, name the section or equation of the paper you mean.
 
-Contributions are licensed under the Apache License 2.0, as section 5 of [LICENSE](LICENSE) describes. Everyone taking part follows the [code of conduct](CODE_OF_CONDUCT.md).
+Contributions fall under the Apache License 2.0, per section 5 of [LICENSE](LICENSE). Please follow the [code of conduct](CODE_OF_CONDUCT.md).
