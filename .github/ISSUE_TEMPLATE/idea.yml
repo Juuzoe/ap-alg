@@ -1,0 +1,9 @@
+name: Idea or question
+description: A use case, another domain with ranges, or a question about the method or the paper.
+body:
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+    validations:
+      required: true

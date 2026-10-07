@@ -1,0 +1,24 @@
+{
+  "name": "ap-alg",
+  "version": "0.1.0",
+  "description": "Soft range matching as an inner product, with a deterministic error bound",
+  "keywords": ["vector search", "range matching", "fourier features", "inner product", "approximation", "job matching", "salary range"],
+  "license": "Apache-2.0",
+  "author": "Juuzoe (https://github.com/Juuzoe)",
+  "homepage": "https://github.com/Juuzoe/ap-alg#readme",
+  "repository": { "type": "git", "url": "git+https://github.com/Juuzoe/ap-alg.git" },
+  "bugs": { "url": "https://github.com/Juuzoe/ap-alg/issues" },
+  "main": "soft-range.js",
+  "types": "soft-range.d.ts",
+  "exports": {
+    ".": { "types": "./soft-range.d.ts", "import": "./soft-range.mjs", "require": "./soft-range.js" },
+    "./package.json": "./package.json"
+  },
+  "files": ["soft-range.js", "soft-range.mjs", "soft-range.d.ts"],
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "test": "node test.js",
+    "bench": "node bench/bench.js && node bench/ann.js",
+    "examples": "node examples/quickstart.js && node examples/rentals.js && node examples/job-search.js"
+  }
+}

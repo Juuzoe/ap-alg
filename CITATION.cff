@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: If you use this code or the method, please cite it as below.
+title: "Soft Range Matching as an Inner Product with a Deterministic Error Bound"
+type: software
+authors:
+  - name: Juuzoe
+    website: https://github.com/Juuzoe
+repository-code: https://github.com/Juuzoe/ap-alg
+license: Apache-2.0
+version: 0.1.0
+date-released: 2026-10-07
+abstract: >-
+  Encodes a numeric interval with a Gaussian tolerance as a fixed-length vector,
+  so that the inner product of a query vector and a stored vector equals the
+  smoothed share of one interval inside the other within an error chosen in advance.
+keywords:
+  - vector search
+  - range matching
+  - Fourier features
+  - inner product

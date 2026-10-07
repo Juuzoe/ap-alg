@@ -1,0 +1,594 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Soft range matching: job search demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@600&family=IBM+Plex+Sans:wght@400;600&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<style>
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: var(--text-base)/var(--leading-body) var(--font-text); }
+.wrap { max-width: var(--page-max); margin: 0 auto; padding-inline: var(--sp-5); padding-block: var(--sp-6) var(--sp-8); display: grid; gap: var(--sp-6); }
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+h1, h2 { font-family: var(--font-display); font-weight: 600; margin: 0; text-wrap: balance; letter-spacing: var(--tracking-display); line-height: var(--leading-tight); }
+h1 { font-size: var(--text-display); }
+h2 { font-size: var(--text-lg); }
+p { margin: 0; max-width: var(--measure); }
+.muted { color: var(--muted); }
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+header { display: grid; gap: var(--sp-3); }
+.facts { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-5); font-size: var(--text-sm); color: var(--muted); }
+.facts b { color: var(--ink); font-family: var(--font-mono); font-weight: 500; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+.btn { font: inherit; font-weight: 600; color: var(--ink); background: var(--surface); border: var(--border-w) solid var(--line-strong); border-radius: var(--radius); padding: var(--sp-2) var(--sp-4); min-height: 44px; cursor: pointer; }
+.btn:active { background: var(--line); }
+
+.failure[hidden] { display: none; }
+.failure { background: var(--surface); border: var(--border-w) solid var(--bad); border-radius: var(--radius); padding: var(--sp-4); display: grid; gap: var(--sp-2); justify-items: start; }
+.failure h2 { color: var(--bad); }
+.failure pre { white-space: pre-wrap; }
+
+form { background: var(--surface); border: var(--border-w) solid var(--line); border-radius: var(--radius); padding: var(--sp-4); display: grid; gap: var(--sp-4); }
+.fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(12rem, 100%), 1fr)); gap: var(--sp-4); }
+.field { display: grid; gap: var(--sp-1); align-content: start; }
+.field.wide { grid-column: span 2; }
+@media (max-width: 520px) { .field.wide { grid-column: auto; } }
+label { font-size: var(--text-sm); font-weight: 600; letter-spacing: var(--tracking-caps); text-transform: uppercase; color: var(--muted); }
+label output { text-transform: none; letter-spacing: 0; color: var(--ink); font-family: var(--font-mono); font-weight: 500; margin-left: var(--sp-2); }
+input[type=text], input[type=number], select { font: inherit; color: var(--ink); background: var(--bg); border: var(--border-w) solid var(--line-strong); border-radius: var(--radius); padding: var(--sp-2) var(--sp-3); width: 100%; }
+input[aria-invalid=true] { border-color: var(--bad); }
+input[type=range] { width: 100%; min-height: 24px; accent-color: var(--accent); }
+.hint { font-size: var(--text-sm); color: var(--muted); }
+.note { font-size: var(--text-sm); font-family: var(--font-mono); color: var(--muted); }
+.err { font-size: var(--text-sm); color: var(--bad); }
+.note:empty, .err:empty { display: none; }
+
+.cols { display: grid; grid-template-columns: 5fr 7fr; gap: var(--sp-5); align-items: start; }
+.col { background: var(--surface); border: var(--border-w) solid var(--line); border-radius: var(--radius); overflow: hidden; }
+.col.soft::before { content: ""; display: block; height: 4px; background: linear-gradient(90deg, transparent, var(--accent) 22%, var(--accent) 78%, transparent); }
+.col > header { padding: var(--sp-3) var(--sp-4); border-bottom: var(--border-w) solid var(--line); gap: var(--sp-1); }
+.sub { font-size: var(--text-sm); color: var(--muted); }
+.stat { font-size: var(--text-lg); line-height: var(--leading-tight); }
+.stat b { font-weight: 600; }
+.warn { color: var(--bad); }
+.list { list-style: none; margin: 0; padding: 0; }
+.list li + li { border-top: var(--border-w) solid var(--line); }
+.post { display: grid; gap: var(--sp-2); width: 100%; text-align: left; font: inherit; color: inherit; background: none; border: 0; padding: var(--sp-3) var(--sp-4); cursor: pointer; }
+.post:focus-visible { outline-offset: -3px; }
+.post:active { background: var(--line); }
+.post[aria-pressed=true] { background: var(--accent-soft); }
+.post .head { display: flex; gap: var(--sp-2); align-items: baseline; }
+.post .rank { font-family: var(--font-mono); color: var(--muted); min-width: 2ch; }
+.post .t { font-weight: 600; flex: 1; }
+.post .score { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.post .c { font-size: var(--text-sm); color: var(--muted); }
+.plotted { font-size: var(--text-sm); color: var(--muted); }
+.post:not([aria-pressed=true]) .plotted { display: none; }
+.pills { display: flex; flex-wrap: wrap; gap: var(--sp-2); font-size: var(--text-sm); }
+.pill { font-family: var(--font-mono); border: var(--border-w) solid var(--line); border-radius: var(--radius-full); padding: 0 var(--sp-2); }
+.pill.none { color: var(--muted); border-style: dashed; }
+.hide { font-size: var(--text-sm); color: var(--bad); }
+.fits { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-4); font-size: var(--text-sm); }
+.bar { display: flex; align-items: center; gap: var(--sp-1); font-family: var(--font-mono); color: var(--ink); }
+.bar span { font-family: var(--font-text); color: var(--muted); min-width: 4.2em; }
+.bar i { display: block; height: 6px; width: 64px; border-radius: var(--radius-full); background: var(--line); position: relative; overflow: hidden; }
+.bar i::after { content: ""; position: absolute; inset: 0 auto 0 0; width: var(--v); background: var(--c); }
+.empty { padding: var(--sp-5) var(--sp-4); display: grid; gap: var(--sp-2); justify-items: start; color: var(--muted); }
+.empty b { color: var(--ink); }
+@media (hover: hover) and (pointer: fine) {
+  .post:hover, .btn:hover { background: var(--bg); }
+  .post[aria-pressed=true]:hover { background: var(--accent-soft); }
+}
+@media (max-width: 900px) { .cols { grid-template-columns: 1fr; } }
+
+section.check { display: grid; gap: var(--sp-4); }
+.row { display: flex; flex-wrap: wrap; gap: var(--sp-3) var(--sp-5); align-items: center; }
+.row select { width: auto; }
+.readout { font-size: var(--text-sm); min-height: 1.5em; max-width: none; }
+.readout b { color: var(--ink); font-weight: 500; }
+.charts { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-5); }
+@media (max-width: 900px) { .charts { grid-template-columns: 1fr; } }
+figure { margin: 0; background: var(--surface); border: var(--border-w) solid var(--line); border-radius: var(--radius); padding: var(--sp-3) var(--sp-3) var(--sp-2); display: grid; gap: var(--sp-2); }
+figcaption { font-size: var(--text-sm); color: var(--muted); padding-inline: var(--sp-1); }
+svg { width: 100%; height: auto; display: block; }
+svg text { fill: var(--muted); font-family: var(--font-mono); font-size: var(--chart-text); }
+svg .grid { stroke: var(--line); stroke-width: 1; }
+svg .ref { fill: none; stroke: var(--muted); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+svg .dot { fill: var(--mark); stroke: var(--surface); stroke-width: 2; }
+svg .limit { stroke: var(--ink); stroke-width: 1; stroke-dasharray: 6 4; }
+svg .you, svg .cross { stroke: var(--ink); stroke-width: 1; }
+svg .cross { visibility: hidden; }
+@media (max-width: 520px) { svg { overflow: visible; } }
+.legend { display: flex; flex-wrap: wrap; gap: var(--sp-4); font-size: var(--text-sm); color: var(--muted); padding-inline: var(--sp-1); }
+.legend span::before { content: ""; display: inline-block; margin-right: var(--sp-2); vertical-align: middle; }
+.legend .line::before { width: 14px; height: 2px; background: var(--muted); }
+.legend .dot::before { width: 8px; height: 8px; border-radius: var(--radius-full); background: var(--mark); }
+.legend .band::before { width: 22px; height: 10px; background: linear-gradient(90deg, transparent, var(--band) 30%, var(--band) 70%, transparent); }
+details summary { cursor: pointer; font-weight: 600; }
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; font-size: var(--text-sm); margin-top: var(--sp-2); }
+caption { text-align: left; color: var(--muted); padding-bottom: var(--sp-2); }
+th, td { padding: var(--sp-1) var(--sp-3); text-align: right; }
+td { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+th { font-weight: 600; color: var(--muted); border-bottom: var(--border-w) solid var(--line); }
+tbody tr + tr td { border-top: var(--border-w) solid var(--line); }
+
+.how { display: grid; gap: var(--sp-3); }
+pre { font: var(--text-sm)/1.6 var(--font-mono); background: var(--surface); border: var(--border-w) solid var(--line); border-radius: var(--radius); padding: var(--sp-3) var(--sp-4); margin: 0; overflow-x: auto; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<p class="sr-only" aria-live="polite" id="live"></p>
+
+<header>
+  <h1>Job search with soft range matching</h1>
+  <p>The salary and experience ranges on each posting become vectors. One dot product per posting then scores keyword match, pay fit and years fit together, and each range fit stays within 0.001 of its exact value. Anything that ranks by inner product, a vector database included, can run the same query.</p>
+  <div class="facts">
+    <span>Numbers per posting <b id="fDim"></b></span>
+    <span>Guaranteed error per range <b>±0.001</b></span>
+    <span>Postings <b id="fN"></b></span>
+    <span id="fBuild"></span>
+  </div>
+</header>
+
+<section class="failure" id="failure" role="alert" hidden>
+  <h2 id="failWhat"></h2>
+  <p id="failMeans"></p>
+  <button type="button" class="btn" id="failRetry"></button>
+  <details><summary>Technical detail</summary><pre id="failDetail"></pre></details>
+</section>
+
+<form id="form" autocomplete="off" novalidate>
+  <div class="fields">
+    <div class="field wide">
+      <label for="kw">Keywords</label>
+      <input id="kw" type="text" value="registered nurse patient" spellcheck="false">
+    </div>
+    <div class="field">
+      <label for="minSal">Minimum salary</label>
+      <input id="minSal" type="text" value="135k" placeholder="135k, $135,000 or 65/hr" spellcheck="false" aria-describedby="minSalNote minSalErr">
+      <span class="note" id="minSalNote"></span>
+      <span class="err" id="minSalErr"></span>
+    </div>
+    <div class="field">
+      <label for="salFlex">Pay flexibility <output id="oSalFlex"></output></label>
+      <input id="salFlex" type="range" min="0" max="40" step="1" value="10" aria-describedby="salFlexHint">
+      <span class="hint" id="salFlexHint"></span>
+    </div>
+    <div class="field">
+      <label for="years">Years of experience</label>
+      <input id="years" type="number" min="0" max="30" step="1" value="4" inputmode="numeric" aria-describedby="yearsErr">
+      <span class="err" id="yearsErr"></span>
+    </div>
+    <div class="field">
+      <label for="yrsFlex">Years flexibility <output id="oYrsFlex"></output></label>
+      <input id="yrsFlex" type="range" min="0" max="3" step="0.5" value="1">
+    </div>
+    <div class="field">
+      <label for="wText">Weight: keywords <output id="oWText"></output></label>
+      <input id="wText" type="range" min="0" max="2" step="0.1" value="1">
+    </div>
+    <div class="field">
+      <label for="wPay">Weight: pay <output id="oWPay"></output></label>
+      <input id="wPay" type="range" min="0" max="2" step="0.1" value="0.5">
+    </div>
+    <div class="field">
+      <label for="wYrs">Weight: years <output id="oWYrs"></output></label>
+      <input id="wYrs" type="range" min="0" max="2" step="0.1" value="0.5">
+    </div>
+    <div class="field">
+      <label for="market">Postings in the market</label>
+      <select id="market">
+        <option value="2000" selected>2,000 (one city)</option>
+        <option value="20000">20,000 (nationwide)</option>
+      </select>
+    </div>
+  </div>
+  <p class="hint">Flexibility and weights live in your query vector, so changing them re-ranks without re-encoding a single posting. The postings are synthetic. Press / to jump to the keywords.</p>
+</form>
+
+<div class="cols">
+  <section class="col" aria-labelledby="hardH">
+    <header>
+      <h2 id="hardH">Hard filters</h2>
+      <p class="sub">Every keyword in the title or skills, pay band reaches your minimum, years inside the range. Ranked by keyword match.</p>
+      <p class="stat" id="hardStat"></p>
+    </header>
+    <ol class="list" id="hardList" role="list"></ol>
+  </section>
+  <section class="col soft" aria-labelledby="softH">
+    <header>
+      <h2 id="softH">Soft range matching</h2>
+      <p class="sub">Keyword match plus pay fit plus years fit: one dot product per posting, then the closed form re-scores the best 50.</p>
+      <p class="stat" id="softStat"></p>
+      <p class="sub mono" id="softDetail"></p>
+    </header>
+    <ol class="list" id="softList" role="list"></ol>
+  </section>
+</div>
+
+<section class="check" id="check" aria-labelledby="checkH">
+  <h2 id="checkH">Check the approximation</h2>
+  <p class="muted" id="checkWho"></p>
+  <div class="row">
+    <label for="eps">Precision for these charts</label>
+    <select id="eps">
+      <option value="0.01">ε = 0.01</option>
+      <option value="0.001" selected>ε = 0.001</option>
+      <option value="0.0001">ε = 0.0001</option>
+    </select>
+    <span class="sub mono" id="epsStat"></span>
+  </div>
+  <p class="readout mono muted" id="readout"></p>
+  <div class="charts">
+    <figure>
+      <figcaption id="fitCap">Pay fit, from 0 to 1, for this posting as your minimum salary changes</figcaption>
+      <svg id="fitChart" viewBox="0 0 560 240" tabindex="0" role="img" aria-labelledby="fitCap" aria-describedby="readout"></svg>
+      <div class="legend"><span class="line">exact closed form</span><span class="dot">dot product of the two vectors</span><span class="band">posted pay band, edges softened by the employer's stretch</span></div>
+    </figure>
+    <figure>
+      <figcaption id="errCap">Error of the dot product at each minimum salary, log scale</figcaption>
+      <svg id="errChart" viewBox="0 0 560 240" tabindex="0" role="img" aria-labelledby="errCap" aria-describedby="readout"></svg>
+    </figure>
+  </div>
+  <details>
+    <summary>Numbers behind both charts</summary>
+    <div class="scroll">
+      <table>
+        <caption id="numbersCap"></caption>
+        <thead><tr><th scope="col">Your minimum</th><th scope="col">Exact fit</th><th scope="col">Dot product</th><th scope="col">Error</th></tr></thead>
+        <tbody id="numbers"></tbody>
+      </table>
+    </div>
+  </details>
+</section>
+
+<section class="how">
+  <h2>How it works</h2>
+  <p>Pay fit is the share of the posted band above your floor, minimum ÷ (1 + flexibility), once both edges carry Gaussian slack: yours, and the employer's stretch. Experience fit is the chance your years land in the required range after the employer's stretch moves each edge out, under the same kind of slack. Both are integrals of a smoothed indicator, and Parseval's identity turns each into a sum over Fourier harmonics. The encoder writes one side's half of every harmonic into the posting vector and the other half into the query. The two slacks multiply as separate Gaussian factors, so each side carries its own.</p>
+  <pre>fit(A, B, σ) = (1/|A|) ∫_A (1_B ∗ N(0, σ²))(x) dx,     σ² = σ_seeker² + σ_employer²
+vector(I, s) = (1/√P)·[ L,  √2·L·sinc(ω_k·h)·e^(−s²ω_k²/2)·cos(ω_k·m),  …sin(ω_k·m) ]  k = 1..K,  ω_k = 2πk/P
+               m, h: midpoint and half-width of I;  L = 1 on the measured side, |I| on the other
+               P = D + 2E + 2W: axis length D plus the open-end reach E and the guard gap W at both ends
+|query · posting − fit| ≤ Σ_(k>K) (2/πk)·e^(−2π²σ_min²k²/P²) + Φ̄(E/σ_max) + 2·Φ̄(2W/σ_max) ≤ ε</pre>
+  <p class="muted">K is the smallest count that meets ε. At ε = 0.001 pay uses 133 numbers and experience 113. The bound holds for every pair, with no random projections and no sampling. A flat scan whose error stays within Δ can prove its top-k exact: it re-scores until the k-th exact score beats the best unseen approximate score plus Δ, the multi-step k-NN rule of Seidl and Kriegel (1998).</p>
+</section>
+
+</div>
+<script src="../soft-range.js"></script>
+<script src="../bench/market.js"></script>
+<script>
+'use strict'
+const $ = id => document.getElementById(id)
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))
+const usd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
+const usdK = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', notation: 'compact', maximumFractionDigits: 0 })
+const count = n => n.toLocaleString('en-US')
+const pay = j => !j.salary ? null : j.salary[0] === j.salary[1] ? usdK.format(j.salary[0]) : `${usdK.format(j.salary[0])}–${usdK.format(j.salary[1])}`
+const yrs = j => !j.years ? null : j.years[1] == null ? `${j.years[0]}+ yrs` : `${j.years[0]}–${j.years[1]} yrs`
+const words = s => s.toLowerCase().match(/[a-z0-9+#]+/g) || []
+const none = () => '<span aria-label="no value">—</span>'
+
+// Search state lives in the URL, one parameter per field, so refresh and back restore the view.
+const FIELDS = [['q', 'kw'], ['min', 'minSal'], ['flex', 'salFlex'], ['yrs', 'years'], ['yflex', 'yrsFlex'],
+  ['wk', 'wText'], ['wp', 'wPay'], ['wy', 'wYrs'], ['n', 'market'], ['eps', 'eps']]
+let M, jobs = [], rows = null, selected = null, current = null, chart = null, pendingJob = null
+let runTimer, liveTimer, lastLive = ''
+
+// One failure panel for the page: what failed, what it means, and the retry that fits.
+function showFailure(what, means, err, retry, retryLabel) {
+  $('failWhat').textContent = `Could not ${what}.`
+  $('failMeans').textContent = means
+  $('failDetail').textContent = err ? String(err.stack || err) : 'No further detail.'
+  $('failRetry').textContent = retryLabel
+  $('failRetry').onclick = retry
+  $('failure').hidden = false
+}
+
+function announce(text) {
+  clearTimeout(liveTimer)
+  liveTimer = setTimeout(() => { if (text !== lastLive) $('live').textContent = lastLive = text }, 700)
+}
+
+const defaultOf = el => el.tagName === 'SELECT' ? [...el.options].find(o => o.defaultSelected).value : el.defaultValue
+
+// A missing parameter means the page default, so going back to the first entry restores the example.
+function readUrl() {
+  let params
+  try { params = new URLSearchParams(location.search) } catch { return }
+  for (const [key, id] of FIELDS) {
+    const el = $(id), v = params.has(key) ? params.get(key).slice(0, 200) : defaultOf(el)
+    el.value = el.tagName === 'SELECT' && ![...el.options].some(o => o.value === v) ? defaultOf(el) : v // ranges clamp themselves
+  }
+  const job = Number(params.get('job'))
+  pendingJob = params.has('job') && Number.isInteger(job) && job >= 0 ? job : null
+  if (pendingJob == null) selected = null
+}
+
+function writeUrl(mode) {
+  const params = new URLSearchParams()
+  for (const [key, id] of FIELDS) params.set(key, $(id).value)
+  if (selected) params.set('job', selected.id)
+  try { history[mode](null, '', '?' + params) } catch { /* sandboxed viewers refuse; the page still works */ }
+}
+
+function build(n) {
+  const t = performance.now()
+  jobs = Market.generate(n, 1)
+  rows = new Float32Array(n * M.dim)
+  jobs.forEach((j, i) => { M.encodeJob(j, rows, i * M.dim); j.words = new Set(words(j.title + ' ' + j.skills)) })
+  $('fDim').textContent = M.dim
+  $('fN').textContent = count(n)
+  $('fBuild').textContent = `Encoded in ${Math.round(performance.now() - t)} ms`
+}
+
+function fieldError(id, message) {
+  $(id).setAttribute('aria-invalid', message ? 'true' : 'false')
+  $(id + 'Err').textContent = message || ''
+}
+
+function readSearch() {
+  const kw = $('kw').value, read = Market.parsePay($('minSal').value)
+  fieldError('minSal', read.error && `${read.error} Pay is left out until then.`)
+  const annual = read.error ? 0 : read.annual
+  $('minSalNote').textContent = read.error ? '' : annual > 600000 ? `${read.note}; counts as $600,000, the top of the pay axis`
+    : annual > 0 && annual < 15000 ? `${read.note}; counts as $15,000, the bottom of the pay axis` : read.note
+  const ytext = $('years').value.trim(), y = Number(ytext), yBad = ytext !== '' && !(y >= 0 && y <= 30)
+  fieldError('years', yBad && 'Use 0 to 30 years. Years are left out until then.')
+  return {
+    text: kw, emb: Market.embed(kw), minSalary: annual, salaryFlex: $('salFlex').value / 100,
+    years: ytext === '' || yBad ? null : y, yearsFlex: +$('yrsFlex').value,
+    wText: +$('wText').value, wSalary: +$('wPay').value, wYears: +$('wYrs').value,
+  }
+}
+
+// Why the hard filters drop a posting, or null if it passes.
+function blocked(p, kws, j) {
+  const miss = kws.find(w => !j.words.has(w))
+  if (miss) return `no "${miss}" in the title or skills`
+  if (p.minSalary > 0 && !j.salary) return 'no salary listed'
+  if (p.minSalary > 0 && j.salary[1] < p.minSalary) return `pay tops out ${Math.max(1, Math.round(100 * (1 - j.salary[1] / p.minSalary)))}% under your minimum`
+  if (p.years != null && j.years && (p.years < j.years[0] || (j.years[1] != null && p.years > j.years[1]))) return `asks for ${yrs(j)}`
+  return null
+}
+
+// How many postings each hard filter leaves, in order: keywords, then pay, then years.
+function funnel(p, kws) {
+  const a = jobs.filter(j => kws.every(w => j.words.has(w)))
+  const b = p.minSalary > 0 ? a.filter(j => j.salary && j.salary[1] >= p.minSalary) : a
+  const c = p.years != null ? b.filter(j => !j.years || (p.years >= j.years[0] && (j.years[1] == null || p.years <= j.years[1]))) : b
+  const steps = [`${kws.length ? 'Your keywords leave' : 'Without keywords, all'} ${count(a.length)} postings`]
+  if (p.minSalary > 0) steps.push(`your pay minimum leaves ${count(b.length)}`)
+  if (p.years != null) steps.push(`your years leave ${count(c.length)}`)
+  return steps.join(', then ') + '.'
+}
+
+const pills = j => `<span class="pills"><span class="pill${pay(j) ? '' : ' none'}">${esc(pay(j) || 'no salary listed')}</span><span class="pill${yrs(j) ? '' : ' none'}">${esc(yrs(j) || 'any experience')}</span></span>`
+const meter = (label, v) => v == null ? `<span class="bar"><span>${label}</span>${none()}</span>`
+  : `<span class="bar"><span>${label}</span><i style="--v:${(100 * Math.max(0, Math.min(1, v))).toFixed(0)}%;--c:var(${v >= 0.8 ? '--good' : v >= 0.3 ? '--accent' : '--bad'})"></i>${v.toFixed(2)}</span>`
+const row = (j, rank, score, extra) => `<li><button type="button" class="post" data-id="${j.id}" aria-pressed="${selected === j}">` +
+  `<span class="head"><span class="rank">${rank}</span><span class="t">${esc(j.title)}</span>${score == null ? '' : `<span class="score">${score.toFixed(3)}</span>`}</span>` +
+  `<span class="c">${esc(j.company)} · ${esc(j.skills)}</span>${pills(j)}${extra}<span class="plotted">Plotted in the check below</span></button></li>`
+
+function renderFirstRun(p) {
+  const n = jobs.length
+  $('hardStat').innerHTML = `<b>${count(n)}</b> postings, no search yet`
+  $('hardList').innerHTML = '<li class="empty"><p>The yes/no filters apply once you search.</p></li>'
+  $('softStat').textContent = 'No search yet'
+  $('softDetail').textContent = ''
+  $('softList').innerHTML = `<li class="empty"><p><b>Type keywords, a minimum salary or your years to rank postings.</b></p><p>Both columns search the same ${count(n)} postings: the hard filters with yes/no rules, the soft ranking by how well each posting fits.</p><button type="button" class="btn" data-example>Load the example search</button></li>`
+  if (!selected || !jobs.includes(selected)) selected = jobs.find(j => j.salary)
+  current = { p }
+  drawCharts()
+}
+
+function render(p) {
+  $('oSalFlex').textContent = $('salFlex').value + '%'
+  $('oYrsFlex').textContent = $('yrsFlex').value + ' yr'
+  $('oWText').textContent = (+$('wText').value).toFixed(1)
+  $('oWPay').textContent = (+$('wPay').value).toFixed(1)
+  $('oWYrs').textContent = (+$('wYrs').value).toFixed(1)
+  const floor = p.minSalary / (1 + p.salaryFlex)
+  $('salFlexHint').textContent = p.minSalary > 0 ? `A single-figure posting at ${usd.format(Math.round(floor / 100) * 100)} (${Math.round(100 * (1 - 1 / (1 + p.salaryFlex)))}% under your minimum) scores 0.5.` : 'Set a minimum salary to use pay fit.'
+
+  const kws = words(p.text), N = jobs.length
+  if (!kws.length && !(p.minSalary > 0) && p.years == null) return renderFirstRun(p)
+
+  const { q, delta } = M.encodeSeeker(p), dim = M.dim
+  const t = performance.now(), approx = new Float64Array(N)
+  for (let i = 0, o = 0; i < N; i++, o += dim) { let s = 0; for (let d = 0; d < dim; d++) s += q[d] * rows[o + d]; approx[i] = s }
+  const scanMs = performance.now() - t
+  const ex = new Array(N), exact = i => (ex[i] ??= M.exactScore(p, jobs[i]))
+  const { top, reranked, certified } = softRange.topK(approx, i => exact(i).score, 10, delta)
+  let maxErr = 0
+  for (let i = 0; i < N; i++) maxErr = Math.max(maxErr, Math.abs(approx[i] - exact(i).score))
+  const hard = jobs.filter(j => !blocked(p, kws, j)).map(j => [j, exact(j.id).text]).sort((a, b) => b[1] - a[1])
+
+  // The plot keeps the posting you picked while it is on screen, and otherwise follows the best result.
+  if (pendingJob != null && jobs[pendingJob]?.salary) selected = jobs[pendingJob]
+  pendingJob = null
+  const shown = new Set([...top.map(x => x.i), ...hard.slice(0, 10).map(([j]) => j.id)])
+  if (!selected || !jobs.includes(selected) || !shown.has(selected.id)) selected = top.map(x => jobs[x.i]).find(j => j.salary) || jobs.find(j => j.salary)
+
+  $('hardStat').innerHTML = `<b>${count(hard.length)}</b> of ${count(N)} postings pass`
+  $('hardList').innerHTML = hard.length ? hard.slice(0, 10).map(([j], k) => row(j, k + 1, null, '')).join('')
+    : `<li class="empty"><p><b>No postings pass all the filters.</b></p><p>${funnel(p, kws)}</p><p>The soft ranking still lists them in the other column.</p></li>`
+  $('softStat').innerHTML = `Top <b>${top.length}</b> of ${count(N)}, ${certified ? 'certified exact' : '<span class="warn">not certified</span>'}`
+  $('softDetail').textContent = `${reranked} re-scored · scan ${scanMs.toFixed(1)} ms · worst error across all ${count(N)}: ${maxErr.toExponential(1)}, bound ${delta.toExponential(1)}`
+  $('softList').innerHTML = top.map(({ i, score }, k) => {
+    const j = jobs[i], e = ex[i], why = blocked(p, kws, j)
+    return row(j, k + 1, score, `<span class="fits">${meter('keywords', e.text)}${meter('pay', e.salary)}${meter('years', e.years)}</span>` +
+      (why ? `<span class="hide">Hard filters hide this: ${esc(why)}</span>` : ''))
+  }).join('')
+  current = { p }
+  drawCharts()
+  announce(`${count(hard.length)} of ${count(N)} postings pass the hard filters. The soft ranking's top ${top.length} is ${certified ? 'certified exact' : 'not certified'}.`)
+}
+
+function run(urlMode) {
+  try {
+    // A re-render replaces the rows; keep keyboard focus on the same posting in the same column.
+    const was = document.activeElement?.closest?.('.post'), list = was?.closest('ol')?.id, id = was?.dataset.id
+    render(readSearch())
+    if (list) ($(list).querySelector(`.post[data-id="${id}"]`) || $(list).querySelector('.post') || $(list)).focus()
+    if (urlMode) writeUrl(urlMode)
+    $('failure').hidden = true
+  } catch (err) {
+    showFailure('rank postings for this search', 'The results below may be from your previous search.', err, () => run('replaceState'), 'Retry the search')
+  }
+}
+
+// Switching markets re-encodes every posting: say so, keep the old results up, then build.
+function switchMarket(urlMode) {
+  const n = +$('market').value
+  if (n === jobs.length) return run(urlMode)
+  const note = `Encoding ${count(n)} postings…`
+  $('hardStat').textContent = note
+  $('softStat').textContent = note
+  $('softDetail').textContent = ''
+  setTimeout(() => {
+    try { build(n); run(urlMode) }
+    catch (err) { showFailure(`encode ${count(n)} postings`, 'The results below are from the previous market.', err, () => switchMarket(urlMode), 'Retry') }
+  }, 30)
+}
+
+// Charts: pay fit and error against the seeker's minimum, on one log salary axis.
+const W = 560, H = 240, L = 58, R = 20, T = 14, B = 44, X0 = 30000, X1 = 400000, STEPS = 80
+const sx = v => L + (W - L - R) * Math.log(v / X0) / Math.log(X1 / X0)
+const xAt = n => X0 * (X1 / X0) ** (n / STEPS)
+const lin = v => T + (H - T - B) * (1 - v)
+const ly = v => T + (H - T - B) * (1 - (Math.log10(Math.max(v, 1e-10)) + 10) / 9)
+const chartModels = {}
+
+function axes(yTicks) {
+  let s = ''
+  for (const [y, label] of yTicks) s += `<line class="grid" x1="${L}" x2="${W - R}" y1="${y}" y2="${y}"/><text x="${L - 8}" y="${y < H - B ? y + 4 : y - 7}" text-anchor="end">${label}</text>`
+  for (const v of [30000, 50000, 100000, 200000, 400000]) s += `<line class="grid" x1="${sx(v)}" x2="${sx(v)}" y1="${T}" y2="${H - B}"/><text x="${sx(v)}" y="${H - B + 16}" text-anchor="middle">${usdK.format(v)}</text>`
+  return s + `<text x="${(L + W - R) / 2}" y="${H - 6}" text-anchor="middle">Your minimum salary, $ a year, log scale</text>`
+}
+
+function youMark(p) {
+  if (!(p.minSalary >= X0 && p.minSalary <= X1)) return ''
+  const x = sx(p.minSalary), right = x < L + 40
+  return `<line class="you" x1="${x}" x2="${x}" y1="${T}" y2="${H - B}"/><text x="${right ? x + 4 : x - 4}" y="${H - B - 6}" text-anchor="${right ? 'start' : 'end'}">you</text>`
+}
+
+function drawCharts() {
+  const j = selected, p = current.p, eps = +$('eps').value
+  const cm = chartModels[eps] ??= softRange.jobModel({ textDim: 0, eps })
+  $('epsStat').textContent = `pay block: ${cm.sal.dim} numbers · guarantee ±${cm.sal.bound.toExponential(1)}`
+  $('checkWho').textContent = `Plotting ${j.title} at ${j.company}, ${pay(j)}, employer stretch ${Math.round(100 * j.salaryStretch)}%, with your pay flexibility of ${Math.round(100 * p.salaryFlex)}%. Pick any posting above to plot it instead.`
+  const enc = cm.encodeJob(j), pts = []
+  for (let n = 0; n <= STEPS; n++) {
+    const s = { minSalary: xAt(n), salaryFlex: p.salaryFlex, wText: 0, wYears: 0, wSalary: 1 }
+    const { q } = cm.encodeSeeker(s)
+    let a = 0
+    for (let d = 0; d < cm.dim; d++) a += q[d] * enc[d]
+    const e = cm.exactScore(s, j).salary
+    pts.push({ x: xAt(n), exact: e, approx: a, err: Math.abs(a - e) })
+  }
+  // The posted band, its edges faded over two standard deviations of the employer's stretch.
+  const sd = Math.log(1 + j.salaryStretch) / 2, clip = v => Math.min(W - R, Math.max(L, sx(v)))
+  const o1 = clip(j.salary[0] * Math.exp(-2 * sd)), i1 = clip(j.salary[0]), i2 = clip(j.salary[1]), o2 = clip(j.salary[1] * Math.exp(2 * sd)), w = Math.max(1, o2 - o1)
+  const stop = (x, op) => `<stop offset="${((x - o1) / w).toFixed(4)}" style="stop-color:var(--mark);stop-opacity:${op}"/>`
+  const band = `<defs><linearGradient id="bandFill">${stop(o1, 0)}${stop(i1, 0.2)}${stop(i2, 0.2)}${stop(o2, 0)}</linearGradient></defs><rect x="${o1}" y="${T}" width="${w}" height="${H - T - B}" fill="url(#bandFill)"/>`
+  const path = pts.map((pt, n) => (n ? 'L' : 'M') + sx(pt.x).toFixed(1) + ' ' + lin(pt.exact).toFixed(1)).join('')
+  const cross = id => `<line class="cross" id="${id}" y1="${T}" y2="${H - B}"/>`
+  $('fitChart').innerHTML = axes([[lin(0), '0'], [lin(0.5), '0.5'], [lin(1), '1']]) + band + youMark(p) + `<path class="ref" d="${path}"/>` +
+    pts.filter((_, n) => n % 4 === 0).map(pt => `<circle class="dot" cx="${sx(pt.x).toFixed(1)}" cy="${lin(pt.approx).toFixed(1)}" r="4"/>`).join('') + cross('fitCross')
+  const worst = pts.reduce((m, pt) => Math.max(m, pt.err), 0), gy = ly(cm.sal.bound)
+  $('errChart').innerHTML = axes([[ly(1e-10), '≤1e-10'], [ly(1e-7), '1e-7'], [ly(1e-4), '1e-4'], [ly(1e-1), '0.1']]) + youMark(p) +
+    `<line class="limit" x1="${L}" x2="${W - R}" y1="${gy}" y2="${gy}"/><text x="${W - R}" y="${gy - 6}" text-anchor="end">guarantee ${cm.sal.bound.toExponential(1)}</text>` +
+    pts.filter((_, n) => n % 2 === 0).map(pt => `<circle class="dot" cx="${sx(pt.x).toFixed(1)}" cy="${ly(pt.err).toFixed(1)}" r="4"/>`).join('') +
+    `<text x="${L + 6}" y="${T + 12}">worst here ${worst.toExponential(1)}</text>` + cross('errCross')
+  $('numbersCap').textContent = `Pay fit for ${j.title} at ${j.company}, every fourth point of the curve`
+  $('numbers').innerHTML = pts.filter((_, n) => n % 4 === 0).map(pt =>
+    `<tr><td>${usd.format(Math.round(pt.x / 100) * 100)}</td><td>${pt.exact.toFixed(4)}</td><td>${pt.approx.toFixed(4)}</td><td>${pt.err.toExponential(1)}</td></tr>`).join('')
+  chart = { pts }
+  const near = p.minSalary > 0 ? Math.round(STEPS * Math.log(Math.min(X1, Math.max(X0, p.minSalary)) / X0) / Math.log(X1 / X0)) : STEPS / 2
+  showReadout(near, false)
+}
+
+// The readout: one crosshair on both charts, snapped to the nearest computed point. It shows on hover or focus.
+function showReadout(n, cross = true) {
+  const pt = chart.pts[n], x = sx(pt.x).toFixed(1)
+  for (const id of ['fitCross', 'errCross']) { const c = $(id); c.setAttribute('x1', x); c.setAttribute('x2', x); c.style.visibility = cross ? 'visible' : 'hidden' }
+  $('readout').innerHTML = `At a <b>${usd.format(Math.round(pt.x / 100) * 100)}</b> minimum: exact fit <b>${pt.exact.toFixed(4)}</b> · dot product <b>${pt.approx.toFixed(4)}</b> · error <b>${pt.err.toExponential(1)}</b>`
+  chart.idx = n
+}
+
+function wire() {
+  for (const id of ['fitChart', 'errChart']) {
+    const svg = $(id)
+    svg.addEventListener('pointermove', e => {
+      if (!chart) return
+      const r = svg.getBoundingClientRect(), vx = (e.clientX - r.left) * W / r.width
+      showReadout(Math.max(0, Math.min(STEPS, Math.round(STEPS * (vx - L) / (W - L - R)))))
+    })
+    svg.addEventListener('keydown', e => {
+      const step = { ArrowLeft: -1, ArrowRight: 1, Home: -STEPS, End: STEPS }[e.key]
+      if (step == null || !chart) return
+      e.preventDefault()
+      showReadout(Math.max(0, Math.min(STEPS, chart.idx + step)))
+      announce($('readout').textContent)
+    })
+  }
+  $('form').addEventListener('input', e => {
+    if (e.target.id === 'market') return
+    clearTimeout(runTimer)
+    runTimer = setTimeout(() => run('replaceState'), 60)
+  })
+  $('form').addEventListener('submit', e => e.preventDefault())
+  $('market').addEventListener('change', () => { pendingJob = selected?.id ?? null; switchMarket('pushState') })
+  $('eps').addEventListener('change', () => {
+    try { drawCharts(); writeUrl('pushState') }
+    catch (err) { showFailure('redraw the charts', 'The charts show the previous precision.', err, () => $('eps').dispatchEvent(new Event('change')), 'Retry') }
+  })
+  $('kw').addEventListener('keydown', e => { if (e.key === 'Escape' && $('kw').value) { $('kw').value = ''; run('replaceState') } })
+  document.addEventListener('keydown', e => {
+    if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey || /^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement.tagName)) return
+    e.preventDefault()
+    $('kw').focus()
+    $('kw').select()
+  })
+  document.addEventListener('click', e => {
+    if (e.target.closest('[data-example]')) {
+      for (const [, id] of FIELDS) $(id).value = defaultOf($(id))
+      selected = null
+      return switchMarket('pushState')
+    }
+    const b = e.target.closest('.post')
+    if (!b) return
+    const j = jobs[+b.dataset.id]
+    if (!j.salary) {
+      $('checkWho').textContent = `${j.title} at ${j.company} lists no salary, so it has no pay fit to plot. Pick a posting with a pay band.`
+      return announce($('checkWho').textContent)
+    }
+    selected = j
+    for (const el of document.querySelectorAll('.post')) el.setAttribute('aria-pressed', String(+el.dataset.id === j.id))
+    drawCharts()
+    writeUrl('pushState')
+    announce(`Plotted ${j.title} at ${j.company} in the check section.`)
+  })
+  addEventListener('popstate', () => { readUrl(); switchMarket(null) })
+  addEventListener('error', e => showFailure('finish the last step', 'The results below may be out of date.', e.error || e.message, () => run('replaceState'), 'Retry the search'))
+}
+
+if (!window.softRange || !window.Market) {
+  showFailure('load soft-range.js and market.js', 'Nothing on this page can rank without them. Open demo/index.html from a full copy of the repository, so ../soft-range.js and ../bench/market.js exist, then reload.', null, () => location.reload(), 'Reload the page')
+  $('form').inert = true
+} else {
+  M = softRange.jobModel({ textDim: Market.TEXT_DIM })
+  readUrl()
+  wire()
+  try { build(+$('market').value); run(null) }
+  catch (err) { showFailure('encode the postings', 'The page has no results to show.', err, () => location.reload(), 'Reload the page') }
+}
+</script>
+</body>
+</html>

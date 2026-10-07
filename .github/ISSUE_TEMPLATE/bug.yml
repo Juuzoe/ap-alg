@@ -1,0 +1,20 @@
+name: Wrong result or crash
+description: The dot product disagrees with fit() by more than the bound, a function throws when it should not, or the demo breaks.
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: Paste code that shows it. For an accuracy report, give the axis() arguments, both intervals and both slacks.
+      render: js
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+  - type: input
+    id: env
+    attributes:
+      label: Node version or browser
