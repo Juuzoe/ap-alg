@@ -8,7 +8,7 @@ authors:
 repository-code: https://github.com/Juuzoe/ap-alg
 license: Apache-2.0
 version: 0.1.0
-date-released: 2026-10-07
+date-released: 2026-10-09
 abstract: >-
   Encodes a numeric interval with a Gaussian tolerance as a fixed-length vector,
   so that the inner product of a query vector and a stored vector equals the
