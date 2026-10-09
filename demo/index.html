@@ -202,12 +202,12 @@ th { font-weight: 600; color: var(--muted); border-bottom: var(--hair) solid var
 <div class="results">
   <section class="hard" aria-labelledby="hardH">
     <div class="head"><h2 id="hardH">Hard filters</h2><p class="stat" id="hardStat"></p></div>
-    <p class="sub">A posting stays only if it passes every keyword, the pay floor and the years range.</p>
+    <p class="sub">A posting must pass each keyword, the pay floor and the years range.</p>
     <ol class="list" id="hardList" role="list"></ol>
   </section>
   <section class="soft" aria-labelledby="softH">
     <div class="head"><h2 id="softH">Soft ranking</h2><p class="stat" id="softStat"></p></div>
-    <p class="sub">Scored by inner product, then the top 50 are re-scored exactly with eq. (1).</p>
+    <p class="sub">The page scores each posting by inner product and re-checks the top 50 against eq. (1).</p>
     <p class="proof" id="softDetail"></p>
     <ol class="list" id="softList" role="list"></ol>
   </section>

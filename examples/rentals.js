@@ -5,7 +5,7 @@ const { axis, encode, fit, topK } = require('../soft-range')
 
 const rng = (s => () => { s = (s + 0x6D2B79F5) >>> 0; let t = Math.imul(s ^ (s >>> 15), s | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296 })(7)
 
-// Rent on a log axis (300 to 10,000 a month), so a 10% tolerance is equally wide at every price.
+// Rent on a log axis (300 to 10,000 a month), so a 10% tolerance has the same width at every price.
 const R0 = 300, rentAxis = axis(Math.log(10000 / R0), Math.log(1.05) / 2, Math.log(1.25) / 2, 1e-3)
 const rentT = v => Math.min(rentAxis.D, Math.max(0, Math.log(v / R0)))
 // Floor area in square metres, 15 to 200.

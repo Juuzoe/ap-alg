@@ -4,13 +4,13 @@ October 2026 · version 0.1 · code and benchmarks: [github.com/Juuzoe/ap-alg](h
 
 ## Abstract
 
-Job search systems usually treat salary and experience as yes/no filters, so a posting that pays 3% under a seeker's floor disappears and a narrow search can return nothing. A graded alternative scores the share of one range that falls inside another after Gaussian smoothing. That score has a closed form, but a vector index cannot evaluate a closed form, so systems apply it to a shortlist after retrieval. We show that the smoothed containment score, with an independent slack on the query side and on the stored side, equals the inner product of two Fourier feature vectors up to an error with a closed-form bound. The bound depends on the axis length and on the smallest and largest combined slack, so a target error fixes the vector length: 133 numbers for a salary range and 113 for an experience range at error $`10^{-3}`$. Over 4 million synthetic seeker-posting pairs the largest observed error was $`3.4\times10^{-4}`$. Every fused score lies within a known $`\Delta`$ of its exact value, which lets a flat scan prove its top 10 exact after re-scoring 50 of 20,000 postings. A k-means inverted file handles the concatenated vectors worse than text vectors: scanning 11% of the postings recovers 76% of the exact top 10, while text vectors with a 1,000-candidate re-score recover all of it. We release the code and the benchmarks under Apache 2.0.
+A salary or experience filter makes a yes/no decision, so a posting that pays 3% under a seeker's floor disappears and a narrow search can return nothing. A graded alternative scores the share of one range that falls inside another after Gaussian smoothing. That score has a closed form, but a vector index cannot evaluate a closed form, so systems apply it to a shortlist after retrieval. We show that the smoothed containment score, with an independent slack on the query side and on the stored side, equals the inner product of two Fourier feature vectors up to an error with a closed-form bound. The bound depends on the axis length and on the smallest and largest combined slack, so a target error fixes the vector length: 133 numbers for a salary range and 113 for an experience range at error $`10^{-3}`$. Over 4 million synthetic seeker-posting pairs the largest observed error was $`3.4\times10^{-4}`$. Every fused score lies within a known $`\Delta`$ of its exact value, which lets a flat scan prove its top 10 exact after re-scoring 50 of 20,000 postings. A k-means inverted file handles the concatenated vectors worse than text vectors: scanning 11% of the postings recovers 76% of the exact top 10, while text vectors with a 1,000-candidate re-score recover all of it. We release the code and the benchmarks under Apache 2.0.
 
 ## 1 Introduction
 
-A typical job search interface exposes pay and experience as filters. A posting passes when its pay band reaches the seeker's minimum and its years requirement contains the seeker's experience; the survivors are then ranked by text relevance. Filters of this kind discard information. A band of \$30k to \$41k passes a \$40k minimum just as a band of \$40k to \$60k does, although 90% of the first band sits below the floor. A posting that omits its salary fails any salary filter, and a seeker one year short of a requirement never sees the posting. In a market of 1,000 synthetic postings, the filter pipeline we describe in Section 5.6 returned no results for 8% of 200 seekers and fewer than ten for 55% of them.
+A typical job search interface exposes pay and experience as filters. A posting passes when its pay band reaches the seeker's minimum and its years requirement contains the seeker's experience, and the system ranks the survivors by text relevance. Filters of this kind discard information. A band of \$30k to \$41k passes a \$40k minimum, as a band of \$40k to \$60k does, although 90% of the first band sits below the floor. A posting that omits its salary fails any salary filter, and a seeker one year short of a requirement never sees the posting. In a market of 1,000 synthetic postings, the filter pipeline we describe in Section 5.6 returned no results for 8% of 200 seekers and fewer than ten for 55% of them.
 
-The graded alternative studied here is the expected share of one interval that lands inside another once Gaussian noise blurs both edges. Li et al. [1] use the same quantity, computed on Gaussian-smoothed boxes, to train box embeddings, and in one dimension it reduces to differences of the normal CDF. Applying it after retrieval is straightforward: search engines grade numeric fields with functions evaluated on documents the query has already matched [13], and vector search systems apply such functions to the candidates an index returns. That design costs recall, because a posting that the text retrieval ranks below the shortlist cutoff is never scored, however well its ranges fit. If the score is instead an inner product of two vectors, any engine that computes inner products can rank by it, a vector database included.
+The graded alternative studied here is the expected share of one interval that lands inside another once Gaussian noise blurs both edges. Li et al. [1] use the same quantity, computed on Gaussian-smoothed boxes, to train box embeddings, and in one dimension it reduces to differences of the normal CDF. Applying it after retrieval is straightforward: search engines grade numeric fields with functions evaluated on documents the query has already matched [13], and vector search systems apply such functions to the candidates an index returns. That design costs recall, because the system never scores a posting that the text retrieval ranks below the shortlist cutoff, however well its ranges fit. If the score is an inner product of two vectors, any engine that computes inner products can rank by it, a vector database included.
 
 This paper makes four contributions.
 
@@ -66,11 +66,11 @@ For an interval $`I`$, a slack $`s`$ and a role that is either *measured* or *re
 v(I, s) = \frac{L}{\sqrt{P}} \Bigl( 1,\; \sqrt{2}\, c_1 \cos \omega_1 m,\; \sqrt{2}\, c_1 \sin \omega_1 m,\; \ldots,\; \sqrt{2}\, c_K \cos \omega_K m,\; \sqrt{2}\, c_K \sin \omega_K m \Bigr).
 ```
 
-**Proposition 1.** Let $`A`$ be encoded as measured with slack $`s_A`$ and $`B`$ as reference with slack $`s_B`$. Then $`\langle v(A, s_A), v(B, s_B)\rangle`$ equals the series of Lemma 1 truncated after $`K`$ harmonics, with $`\sigma^2 = s_A^2 + s_B^2`$.
+**Proposition 1.** Encode $`A`$ as measured with slack $`s_A`$ and $`B`$ as reference with slack $`s_B`$. Then $`\langle v(A, s_A), v(B, s_B)\rangle`$ equals the series of Lemma 1 truncated after $`K`$ harmonics, with $`\sigma^2 = s_A^2 + s_B^2`$.
 
 *Proof.* The product of the $`k`$-th coordinate pairs is $`(2\lvert B\rvert/P)\, c_k^A c_k^B (\cos\omega_k m_A \cos\omega_k m_B + \sin\omega_k m_A \sin\omega_k m_B)`$. The bracket is $`\cos \omega_k (m_A - m_B)`$, and $`e^{-s_A^2 \omega_k^2/2} e^{-s_B^2 \omega_k^2/2} = e^{-\sigma^2 \omega_k^2/2}`$. $`\square`$
 
-The factorization in the last step allows the slack to live on both sides. A seeker who widens their tolerance changes $`s_A`$ in one query vector, and every stored vector stays valid. Encodings that store a smoothed indicator, such as interpolation on a grid, fix $`\sigma`$ when the index is built.
+The factorization in the last step allows the slack to live on both sides. A seeker who widens their tolerance changes $`s_A`$ in one query vector, and every stored vector stays valid. Encodings that store a smoothed indicator, such as interpolation on a grid, fix $`\sigma`$ when you build the index.
 
 ### 3.3 Error bound
 
@@ -100,7 +100,7 @@ Use $`\lvert \operatorname{sinc}\rvert \le 1`$ for the measured side and $`\lver
 
 Open ends. For $`x \le D`$, the mass the truncation removes is $`\int_{D+E}^{\infty} \varphi_\sigma(x - y)\,dy = \bar\Phi((D + E - x)/\sigma) \le \bar\Phi(E/\sigma_{\max})`$. $`\square`$
 
-The bound holds uniformly: no assumption on the lengths or positions of $`A`$ and $`B`$ enters, because normalizing by $`\lvert A\rvert`$ on the measured side and bounding $`\lvert B\rvert\operatorname{sinc}`$ on the reference side removes them. It is also deterministic, with no failure probability, because every pair uses the same harmonic frequencies. To compute it we bound the tail of the sum by its first term plus an integral,
+The bound is uniform: no assumption on the lengths or positions of $`A`$ and $`B`$ enters, because normalizing by $`\lvert A\rvert`$ on the measured side and bounding $`\lvert B\rvert\operatorname{sinc}`$ on the reference side removes them. It is deterministic, with no failure probability, because every pair uses the same harmonic frequencies. To compute it we bound the tail of the sum by its first term plus an integral,
 
 ```math
 T_K(\sigma) \le \frac{2}{\pi (K+1)}\, e^{-c (K+1)^2} \Bigl(1 + \frac{1}{2c(K+1)}\Bigr), \qquad c = \frac{2\pi^2 \sigma^2}{P^2}.
@@ -112,7 +112,7 @@ The terms of $`R_W`$ with $`j \ge 1`$ are below $`10^{-80}`$ for every axis in t
 
 **Corollary 1.** Given $`\varepsilon`$, set $`E = \sigma_{\max}\max(4, \bar\Phi^{-1}(\varepsilon/4))`$ and $`W = \sigma_{\max}\max(3, \bar\Phi^{-1}(\varepsilon/8)/2)`$, and take the smallest $`K`$ for which the bound of Theorem 1, open-end term included, is at most $`\varepsilon`$. Every pair then meets the requirement of Section 2 with $`d = 2K + 1`$, and $`K`$ grows in proportion to $`(P/\sigma_{\min})\sqrt{\ln(1/\varepsilon)}`$.
 
-The growth rate follows from $`e^{-cK^2} \approx \varepsilon`$. Doubling the axis or halving the smallest slack doubles the length, while each tenfold tightening of $`\varepsilon`$ adds about 30 numbers to a block at the settings of Section 3.6 (see the table there). This is why salary uses a logarithmic axis: a linear axis from \$15k to \$600k with the same relative tolerances would need many times more harmonics. The implementation accepts $`\varepsilon \ge 10^{-9}`$; below that, rounding in the closed form of Definition 1 exceeds $`\varepsilon`$ on wide axes, so the reference value itself stops being exact enough to test against.
+The growth rate follows from $`e^{-cK^2} \approx \varepsilon`$. Doubling the axis or halving the smallest slack doubles the length, while each tenfold tightening of $`\varepsilon`$ adds about 30 numbers to a block at the settings of Section 3.6 (see the table there). The same scaling explains the logarithmic salary axis: a linear axis from \$15k to \$600k with the same relative tolerances would need many times more harmonics. The implementation accepts $`\varepsilon \ge 10^{-9}`$; below that, rounding in the closed form of Definition 1 exceeds $`\varepsilon`$ on wide axes, so the reference value itself stops being exact enough to test against.
 
 ### 3.5 Fused scores and certified top-k
 
@@ -124,7 +124,7 @@ s(q, p) = w_t \langle e_q, e_p\rangle + \sum_i w_i F_i(q, p),
 
 and the vector form concatenates the text embedding with one block per attribute, each block scaled by its weight on the query side. Theorem 1 then bounds the error of the fused inner product by $`\Delta = \sum_i \lvert w_i\rvert\, \varepsilon_i`$. Storing the posting vectors in float32 adds at most $`2^{-24}\sum_t \lvert q_t v_t\rvert`$ when the engine sums in float64, below $`2\times10^{-7}`$ per unit weight on our axes, and the implementation adds $`10^{-5}`$ per unit weight to $`\Delta`$ to cover it.
 
-**Proposition 2 (certified top-k).** Let $`\tilde s_1 \ge \tilde s_2 \ge \dots \ge \tilde s_N`$ be approximate scores with $`\lvert \tilde s_i - s_i\rvert \le \Delta`$. Re-score the first $`M`$ postings exactly. If the $`k`$-th largest exact score among them is at least $`\tilde s_{M+1} + \Delta`$, the $`k`$ best re-scored postings are an exact top-k.
+**Proposition 2 (certified top-k).** Let $`\tilde s_1 \ge \tilde s_2 \ge \dots \ge \tilde s_N`$ be approximate scores with $`\lvert \tilde s_i - s_i\rvert \le \Delta`$. Compute the exact scores of the first $`M`$ postings. If the $`k`$-th largest exact score among them is at least $`\tilde s_{M+1} + \Delta`$, the $`k`$ best re-scored postings are an exact top-k.
 
 *Proof.* Any posting $`j > M`$ has $`s_j \le \tilde s_j + \Delta \le \tilde s_{M+1} + \Delta`$, which is at most the $`k`$-th exact score already found. $`\square`$
 
@@ -168,7 +168,7 @@ Table 1 compares the encoded scores with the closed form on all 4 million seeker
 | observed maximum | $`3.4\times10^{-4}`$ | $`1.3\times10^{-4}`$ | $`1.7\times10^{-4}`$ |
 | observed mean | $`1.6\times10^{-7}`$ | $`1.2\times10^{-6}`$ | $`6.8\times10^{-7}`$ |
 
-The worst observed error reaches 37% of the bound for pay and 14% for years. Theorem 1 is loose here because it charges every dropped harmonic its largest possible amplitude at once, while real pairs are not aligned to the worst phase at every frequency. The mean error sits two to three orders of magnitude below the maximum, since most pairs lie far from the edges where the fit changes.
+The worst observed error reaches 37% of the bound for pay and 14% for years. Theorem 1 is loose here because it charges every dropped harmonic its largest possible amplitude at once, while real pairs do not line up with the worst phase at every frequency. The mean error sits two to three orders of magnitude below the maximum, since most pairs lie far from the edges where the fit changes.
 
 ### 5.3 Other encodings of the same size
 
@@ -192,13 +192,13 @@ For each seeker we ranked all 20,000 postings by the fused inner product and app
 
 The common alternative ranks by text alone, keeps a shortlist and re-scores it with the exact fused score. Table 3 shows how long the shortlist must be.
 
-*Table 3. Recall@10 of a text shortlist re-scored exactly, against the exact top 10.*
+*Table 3. Recall@10 of a text shortlist with exact re-scoring, against the exact top 10.*
 
 | candidates kept by text cosine | 50 | 200 | 1,000 | 5,000 |
 |---|---|---|---|---|
 | recall@10 | 0.480 | 0.792 | 1.000 | 1.000 |
 
-A flat scan of the fused vectors reaches 1.000 with 50 exact re-scores. The text pipeline needs 1,000, which here equals the size of one role in the market; the synthetic text vectors separate roles more cleanly than real embeddings would, so we read this as a lower bound on the shortlist a real system needs.
+A flat scan of the fused vectors reaches 1.000 with 50 exact re-scores. The text pipeline needs 1,000, which here equals the size of one role in the market; the synthetic text vectors separate roles better than real embeddings would, so we read this as a lower bound on the shortlist a real system needs.
 
 Table 4 places both kinds of vector in an inverted file with 128 lists, trained by k-means in L2 on a 4,000-posting sample and probed by the inner product between the query and each centroid [15]. For the fused vectors we re-score the best 50 candidates found in the probed lists; for text vectors, the best 1,000.
 
@@ -231,9 +231,9 @@ Of the 2,000 top-10 results of the fused ranking on the full market, 97.8% match
 
 Li et al. [1] convolve box indicators with Gaussians and rank by the volume of the intersection over the volume of one box; in one dimension this is Definition 1. They evaluate it per pair in closed form to train embeddings, without an inner-product form or an error bound. TEMPS [2] maps time intervals to Gaussians and adds a Gaussian-KL inclusion score to a dense retriever's cosine, again per pair and outside the vector product. Wei et al. [3] fold an exponential recency decay into the stored and query vectors so that unmodified inner-product indexes rank by semantic and freshness score together; their method scores one timestamp per item under an exact exponential decay, so intervals and approximation error do not arise.
 
-Deterministic Fourier features appear in kernel approximation. Dao, De Sa and Ré [4] replace random frequencies with Gaussian quadrature and bound the resulting error, and Jagdt et al. [5] use harmonics on a padded period with Gaussian spectral weights, choosing the smallest truncation that meets a target error, as our Corollary 1 does. Both approximate a kernel between two points, so they never need the transform of an interval or a slack split across two vectors. Mip-NeRF [6] damps Fourier features by $`e^{-\sigma^2\omega^2/2}`$ to integrate them over a Gaussian region, feeding them to a neural network rather than using their inner product as a score. Random Fourier features [7] are the standard randomized construction; Section 5.3 shows why they fail on interval integrals at this size.
+Deterministic Fourier features appear in kernel approximation. Dao, De Sa and Ré [4] replace random frequencies with Gaussian quadrature and bound the resulting error, and Jagdt et al. [5] use harmonics on a padded period with Gaussian spectral weights, choosing the smallest truncation that meets a target error, as our Corollary 1 does. Both approximate a kernel between two points, so they never need the transform of an interval or a slack split across two vectors. Mip-NeRF [6] damps Fourier features by $`e^{-\sigma^2\omega^2/2}`$ to integrate them over a Gaussian region, and feeds them to a neural network as input features. Random Fourier features [7] are the standard randomized construction; Section 5.3 shows why they fail on interval integrals at this size.
 
-Lee, Kim and Chung [8] estimate range selectivity from cosine-series coefficients, which is the same basis-integral inner product applied to one aggregate density per table rather than to per-item vectors. Spatial Semantic Pointers [9] encode a region as the integral of phasor vectors and read graded membership from a dot product, with random frequencies and unit normalization and without a calibrated containment score or an error bound. Range-filtered approximate nearest-neighbor indexes [11, 12] evaluate interval predicates inside graph indexes as yes/no filters. Search engines grade a numeric field with decay functions around a point at scoring time [13], and some vector frameworks encode single numeric values as vector blocks [14]. The certified top-k step is the multi-step k-NN search of Seidl and Kriegel [10]. Maximum inner product search over vectors of unequal norm is known to behave differently from cosine search [16], which is consistent with Table 4.
+Lee, Kim and Chung [8] estimate range selectivity from cosine-series coefficients, which is the same basis-integral inner product, applied to one aggregate density per table. Spatial Semantic Pointers [9] encode a region as the integral of phasor vectors and read graded membership from a dot product, with random frequencies and unit normalization and without a calibrated containment score or an error bound. Range-filtered approximate nearest-neighbor indexes [11, 12] evaluate interval predicates inside graph indexes as yes/no filters. Search engines grade a numeric field with decay functions around a point at scoring time [13], and some vector frameworks encode single numeric values as vector blocks [14]. The certified top-k step is the multi-step k-NN search of Seidl and Kriegel [10]. Shrivastava and Li [16] show that maximum inner product search over vectors of unequal norm differs from cosine search, which is consistent with Table 4.
 
 ## 7 Limitations and future work
 
@@ -241,9 +241,9 @@ All results so far come from synthetic data. Real postings need pay-period and c
 
 The Gaussian slack model gives every value inside a band the same weight and bends both edges by the same amount, while a real employer may stretch upward sooner than downward.
 
-The fused score is additive, so a strong text match can compensate for a poor pay fit. Dealbreakers such as work authorization or location belong in hard filters. A re-score step can apply a soft conjunction instead, $`w_t\langle e_q, e_p\rangle + (w_{\text{pay}} + w_{\text{years}}) F_{\text{pay}} F_{\text{years}}`$, which never exceeds the additive score when the weights are non-negative and the fits lie in $`[0, 1]`$, so Proposition 2 still applies.
+The fused score is additive, so a strong text match can compensate for a poor pay fit. Dealbreakers such as work authorization or location belong in hard filters. A re-score step can apply a soft conjunction, $`w_t\langle e_q, e_p\rangle + (w_{\text{pay}} + w_{\text{years}}) F_{\text{pay}} F_{\text{years}}`$, which never exceeds the additive score when the weights are non-negative and the fits lie in $`[0, 1]`$, so Proposition 2 holds for it.
 
-The proof assumes the engine sums inner products in float64. An engine that also multiplies and adds in float32 measured about $`2\times10^{-6}`$ per unit weight on our data, inside the margin, but its worst case grows with the vector length and we have no proof for it. Each block handles one attribute, and joint ranges over several attributes would need a tensor-product construction whose length multiplies across attributes. The inverted-file results in Section 5.5 leave open how to index the fused vectors efficiently at scale.
+The proof assumes the engine sums inner products in float64. An engine that does all its arithmetic in float32 measured about $`2\times10^{-6}`$ per unit weight on our data, inside the margin, but its worst case grows with the vector length and we have no proof for it. Each block handles one attribute, and joint ranges over several attributes would need a tensor-product construction whose length multiplies across attributes. The inverted-file results in Section 5.5 leave open how to index the fused vectors at scale without a flat scan.
 
 ## References
 
@@ -263,7 +263,7 @@ The proof assumes the engine sums inner products in float64. An engine that also
 
 [8] J.-H. Lee, D.-H. Kim, C.-W. Chung. Multi-dimensional Selectivity Estimation Using Compressed Histogram Information. SIGMOD 1999. https://doi.org/10.1145/304182.304200
 
-[9] B. Komer, T. C. Stewart, A. R. Voelker, C. Eliasmith. A Neural Representation of Continuous Space Using Fractional Binding. CogSci 2019. See also E. P. Frady, D. Kleyko, C. J. Kymn, B. A. Olshausen, F. T. Sommer. Computing on Functions Using Randomized Vector Representations. arXiv:2109.03429.
+[9] B. Komer, T. C. Stewart, A. R. Voelker, C. Eliasmith. A Neural Representation of Continuous Space Using Fractional Binding. CogSci 2019. E. P. Frady, D. Kleyko, C. J. Kymn, B. A. Olshausen, F. T. Sommer. Computing on Functions Using Randomized Vector Representations. arXiv:2109.03429.
 
 [10] T. Seidl, H.-P. Kriegel. Optimal Multi-Step k-Nearest Neighbor Search. SIGMOD 1998, pp. 154-165. https://doi.org/10.1145/276304.276319
 

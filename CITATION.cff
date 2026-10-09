@@ -12,7 +12,7 @@ date-released: 2026-10-07
 abstract: >-
   Encodes a numeric interval with a Gaussian tolerance as a fixed-length vector,
   so that the inner product of a query vector and a stored vector equals the
-  smoothed share of one interval inside the other within an error chosen in advance.
+  smoothed share of one interval inside the other within an error the user sets in advance.
 keywords:
   - vector search
   - range matching
