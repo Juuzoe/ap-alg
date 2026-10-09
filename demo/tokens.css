@@ -1,37 +1,42 @@
 /* Design tokens for the demo. Every colour, size, space and radius the page uses lives here.
+   The palette is intaglio green on banknote paper, with a red pencil for what the filters drop.
    Tier 1 names what a value is. Tier 2 names the job it does. index.html reads the tier 2 roles. */
 
 :root {
-  /* Tier 1: blue-grey ink ramp, amber, red */
-  --c-ink-25:  #FBFCFD;  --c-ink-50:  #F1F3F5;  --c-ink-100: #E5E9EF;  --c-ink-200: #D8DDE4;
-  --c-ink-350: #98A3B3;  --c-ink-450: #808999;  --c-ink-600: #5B6576;  --c-ink-650: #626E82;
-  --c-ink-800: #2A3340;  --c-ink-900: #18202E;  --c-ink-925: #171D26;  --c-ink-950: #10141A;
-  --c-amber-100: #F5E6CC;  --c-amber-400: #E3A546;  --c-amber-500: #C4852F;  --c-amber-700: #A8660F;
-  --c-amber-900: #3B2D15;
-  --c-red-300: #E57A63;  --c-red-700: #B0412C;
+  /* Tier 1: green-tinted neutrals (OKLCH hue 155), banknote green, red pencil */
+  --c-paper-50:  #F3F7F4;  --c-paper-25:  #FBFDFC;  --c-paper-200: #D4DBD6;  --c-paper-450: #7F8982;
+  --c-paper-600: #535E56;  --c-paper-900: #19221C;
+  --c-night-950: #0F1411;  --c-night-925: #161B17;  --c-night-800: #2E3530;  --c-night-600: #5D6660;
+  --c-night-350: #9EA7A1;  --c-night-100: #E6EBE7;
+  --c-green-100: #D7EDDE;  --c-green-700: #2A6643;  --c-green-300: #7FC397;  --c-green-900: #1D3425;
+  --c-red-700: #A8372A;    --c-red-300: #F28979;
 
   /* Tier 2: roles, light */
-  --bg: var(--c-ink-50);
-  --field: var(--c-ink-25);
-  --ink: var(--c-ink-900);
-  --muted: var(--c-ink-600);
-  --line: var(--c-ink-200);
-  --line-strong: var(--c-ink-450);
-  --accent: var(--c-amber-700);
-  --accent-soft: var(--c-amber-100);
-  --mark: var(--c-amber-700);
+  --bg: var(--c-paper-50);
+  --field: var(--c-paper-25);
+  --ink: var(--c-paper-900);
+  --muted: var(--c-paper-600);
+  --line: var(--c-paper-200);
+  --line-strong: var(--c-paper-450);
+  --accent: var(--c-green-700);
+  --accent-soft: var(--c-green-100);
+  --mark: var(--c-green-700);
   --bad: var(--c-red-700);
   color-scheme: light;
 
-  /* Type: two families, three sizes */
-  --font-text: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  /* Type: a journal serif for headings and prose, a humanist sans for controls and figures */
+  --font-serif: "STIX Two Text", "Times New Roman", serif;
+  --font-text: "Source Sans 3", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-code: ui-monospace, "Cascadia Mono", Consolas, monospace;
   --text-sm: 0.8125rem;   /* 13px */
   --text-base: 0.9375rem; /* 15px */
+  --text-prose: 1.0625rem;/* 17px */
   --text-field: 1rem;     /* 16px stops iOS zooming into inputs */
-  --text-h1: 1.5rem;      /* 24px */
-  --chart-text: 11px;     /* SVG units; the chart scales with its box */
+  --text-h2: 1.125rem;    /* 18px */
+  --text-h1: 2rem;        /* 32px */
+  --chart-text: 12px;     /* SVG units; the chart scales with its box */
   --leading-body: 1.45;
+  --leading-prose: 1.55;
   --leading-tight: 1.15;
 
   /* Space: one 4px scale */
@@ -39,7 +44,7 @@
   --sp-5: 24px; --sp-6: 32px; --sp-7: 48px;
 
   /* Geometry */
-  --radius: 6px;
+  --radius: 2px;
   --hair: 1px;
   --page-max: 1120px;
 }
@@ -47,20 +52,20 @@
 /* Tier 2: roles, dark. Twice, so the system setting and an explicit data-theme both work. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: var(--c-ink-950);  --field: var(--c-ink-925);  --ink: var(--c-ink-100);  --muted: var(--c-ink-350);
-    --line: var(--c-ink-800);  --line-strong: var(--c-ink-650);
-    --accent: var(--c-amber-400);  --accent-soft: var(--c-amber-900);  --mark: var(--c-amber-500);  --bad: var(--c-red-300);
+    --bg: var(--c-night-950);  --field: var(--c-night-925);  --ink: var(--c-night-100);  --muted: var(--c-night-350);
+    --line: var(--c-night-800);  --line-strong: var(--c-night-600);
+    --accent: var(--c-green-300);  --accent-soft: var(--c-green-900);  --mark: var(--c-green-300);  --bad: var(--c-red-300);
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: var(--c-ink-950);  --field: var(--c-ink-925);  --ink: var(--c-ink-100);  --muted: var(--c-ink-350);
-  --line: var(--c-ink-800);  --line-strong: var(--c-ink-650);
-  --accent: var(--c-amber-400);  --accent-soft: var(--c-amber-900);  --mark: var(--c-amber-500);  --bad: var(--c-red-300);
+  --bg: var(--c-night-950);  --field: var(--c-night-925);  --ink: var(--c-night-100);  --muted: var(--c-night-350);
+  --line: var(--c-night-800);  --line-strong: var(--c-night-600);
+  --accent: var(--c-green-300);  --accent-soft: var(--c-green-900);  --mark: var(--c-green-300);  --bad: var(--c-red-300);
   color-scheme: dark;
 }
 
-/* On a phone the chart shrinks to about half size, so its text grows to stay near 10px. */
+/* On a phone the chart shrinks to about half size, so its text grows to stay near 11px. */
 @media (max-width: 520px) {
-  :root { --chart-text: 18px; }
+  :root { --chart-text: 20px; }
 }

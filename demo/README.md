@@ -1,6 +1,6 @@
 # Demo
 
-`index.html` runs one job search two ways. The left column applies hard filters: every keyword present, the pay band reaching your minimum, your years inside the range. The right column ranks every posting by one dot product of keyword match, pay fit and years fit, re-scores the best 50 with the closed form and says whether the top 10 is certified exact. Each ranked row draws its pay band against your minimum, and the chart under the filter results plots one posting's exact pay fit against the dot product.
+The header states the problem and the method in two paragraphs, with the definition of the score as equation (1). Below it, `index.html` runs one job search two ways. The left column applies hard filters: every keyword present, the pay band reaching your minimum, your years inside the range. The right column ranks every posting by one dot product of keyword match, pay fit and years fit, re-scores the best 50 with the closed form and says whether the top 10 is certified exact. Each ranked row draws its pay band against your minimum, and the chart under the filter results plots one posting's exact pay fit against the dot product.
 
 ## Running it
 
@@ -21,5 +21,5 @@ The search is kept in the URL, so a link or a refresh restores it. Press `/` to 
 | file | contents |
 |---|---|
 | `index.html` | markup, styles and script |
-| `tokens.css` | colours, type sizes and spacing, for light and dark themes |
+| `tokens.css` | colours, type sizes and spacing, for light and dark themes (green ink on paper; the pay bands are hatched) |
 | `screenshot.png` | the image in the top-level README |
