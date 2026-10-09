@@ -1,6 +1,6 @@
 # Demo
 
-`index.html` runs a job search over a synthetic market two ways at once. The left column applies hard filters (every keyword present, pay band reaching the minimum, years inside the range). The right column ranks every posting by one dot product of keyword match, pay fit and years fit, then re-scores the best 50 with the closed form and reports whether the top 10 is certified exact. Below the results, the page plots the exact pay fit of the selected posting against the dot product, with the error at each minimum salary.
+`index.html` runs one job search two ways. The left column applies hard filters: every keyword present, the pay band reaching your minimum, your years inside the range. The right column ranks every posting by one dot product of keyword match, pay fit and years fit, re-scores the best 50 with the closed form and says whether the top 10 is certified exact. Each ranked row draws its pay band against your minimum, and the chart under the filter results plots one posting's exact pay fit against the dot product.
 
 ## Running it
 
